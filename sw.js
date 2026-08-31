@@ -1,8 +1,13 @@
-const CACHE = 'bookshelf-v1';
+const CACHE = 'bookshelf-v3';
 const ASSETS = [
   './',
   './index.html',
-  './manifest.json'
+  './manifest.json',
+  'icon-192.png',
+  'icon-512.png',
+  './icons/maskable-192.png',
+  './icons/maskable-512.png',
+  './icons/apple-touch-icon.png'
 ];
 
 self.addEventListener('install', e => {
@@ -20,7 +25,6 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  // Network-first for API, cache-first for assets
   const url = new URL(e.request.url);
   if (url.searchParams.has('action') || e.request.method === 'POST') {
     e.respondWith(fetch(e.request));
