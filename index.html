@@ -11,16 +11,22 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
 
-
-<!-- PWA Manifest -->
+<!-- PWA -->
 <link rel="manifest" href="manifest.json">
 
-<!-- ✅ ADD THESE LINES -->
-<link rel="icon" href="./icons/icon-192.png" type="image/png">
+<!-- ✅ FAVICON & APPLE ICONS -->
+<link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="./icons/icon-512.png">
 <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+
+<!-- ✅ iOS META TAGS -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="The Bookshelf">
+<meta name="mobile-web-app-capable" content="yes">
+
+<!-- ✅ ANDROID THEME COLOR -->
+<meta name="theme-color" content="#000000">
 
 <style>
   :root {
@@ -136,9 +142,13 @@
     font-size: .75rem; font-weight: 600;
   }
   .badge-stock {
-    position: absolute; bottom: 12px; left: 12px;
-    padding: 4px 10px; border-radius: 20px;
-    font-size: .75rem; font-weight: 500;
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: .75rem;
+    font-weight: 500;
   }
   .stock-in { background: rgba(46,204,113,.2); color: var(--success); border: 1px solid var(--success); }
   .stock-low { background: rgba(255,193,7,.2); color: #ffc107; border: 1px solid #ffc107; }
@@ -197,6 +207,54 @@
     padding: 6px 14px; border-radius: 20px; font-weight: 500; font-size: .85rem;
   }
   #installBtn { display: none; }
+
+  /* Floating Action Button */
+  .fab-btn {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--gold), var(--gold-soft));
+    color: #000;
+    border: none;
+    box-shadow: 0 6px 20px rgba(212,175,55,.4);
+    font-size: 1.5rem;
+    cursor: pointer;
+    z-index: 1000;
+    transition: all .3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .fab-btn:hover {
+    transform: scale(1.1) rotate(5deg);
+    box-shadow: 0 8px 25px rgba(212,175,55,.6);
+  }
+  .fab-label {
+    position: absolute;
+    right: 70px;
+    background: var(--card);
+    color: var(--gold);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: .85rem;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .3s;
+    border: 1px solid var(--border);
+  }
+  .fab-btn:hover .fab-label { opacity: 1; }
+
+  /* Pulse animation */
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(212,175,55,.6); }
+    70% { box-shadow: 0 0 0 15px rgba(212,175,55,0); }
+    100% { box-shadow: 0 0 0 0 rgba(212,175,55,0); }
+  }
+  .fab-btn { animation: pulse 2.5s infinite; }
 
   footer {
     border-top: 1px solid var(--border);
@@ -299,6 +357,69 @@
   </div>
 </div>
 
+<!-- REQUEST BOOK MODAL -->
+<div class="modal fade" id="requestModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="bi bi-search-heart text-warning"></i> Request a Book
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted small mb-3">
+          <i class="bi bi-info-circle"></i> Can't find what you're looking for? Let us know and we'll try to source it for you!
+        </p>
+        <form id="requestForm">
+          <div class="mb-3">
+            <label class="form-label">Book Title *</label>
+            <input type="text" class="form-control" id="rTitle" required placeholder="e.g., The Great Gatsby" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Author</label>
+            <input type="text" class="form-control" id="rAuthor" placeholder="e.g., F. Scott Fitzgerald" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Publisher / ISBN</label>
+            <input type="text" class="form-control" id="rPublisher" placeholder="Optional" />
+          </div>
+          <hr style="border-color: var(--border);" />
+          <h6 class="mb-3">Your Contact Details</h6>
+          <div class="mb-3">
+            <label class="form-label">Your Name *</label>
+            <input type="text" class="form-control" id="rName" required />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Phone *</label>
+            <input type="tel" class="form-control" id="rPhone" required />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input type="email" class="form-control" id="rEmail" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Additional Notes</label>
+            <textarea class="form-control" id="rNotes" rows="2" placeholder="Edition, condition preference, etc."></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-book" id="submitRequest">
+          <i class="bi bi-send"></i> Submit Request
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FLOATING REQUEST BUTTON -->
+<button id="requestBookBtn" class="fab-btn" title="Request a Book">
+  <i class="bi bi-book-half"></i>
+  <span class="fab-label">Request Book</span>
+</button>
+
 <!-- TOAST -->
 <div class="position-fixed bottom-0 end-0 p-3" style="z-index:9999">
   <div id="toast" class="toast toast-custom" role="alert">
@@ -374,7 +495,7 @@ function renderCategories() {
   });
 }
 
-/* ---------- Render Books ---------- */
+/* ---------- Render Books (FIXED: Badge inside .book-img) ---------- */
 function renderBooks() {
   const grid = document.getElementById('booksGrid');
   const loader = document.getElementById('loader');
@@ -475,7 +596,7 @@ document.getElementById('submitBooking').addEventListener('click', async () => {
     if (data.success) {
       showToast(`✅ Reserved! Collect before ${new Date(data.expiry).toLocaleString()}`, 'success');
       form.reset();
-      loadBooks(); // refresh stock
+      loadBooks();
     } else {
       showToast('❌ ' + (data.message || 'Booking failed'), 'danger');
     }
@@ -484,6 +605,51 @@ document.getElementById('submitBooking').addEventListener('click', async () => {
   } finally {
     btn.disabled = false;
     btn.innerHTML = '<i class="bi bi-check2-circle"></i> Confirm Reservation';
+  }
+});
+
+/* ---------- Request a Book ---------- */
+document.getElementById('requestBookBtn').addEventListener('click', () => {
+  new bootstrap.Modal(document.getElementById('requestModal')).show();
+});
+
+document.getElementById('submitRequest').addEventListener('click', async () => {
+  const form = document.getElementById('requestForm');
+  if (!form.checkValidity()) { form.reportValidity(); return; }
+
+  const btn = document.getElementById('submitRequest');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Submitting...';
+
+  const payload = {
+    action: 'requestBook',
+    title: document.getElementById('rTitle').value.trim(),
+    author: document.getElementById('rAuthor').value.trim(),
+    publisher: document.getElementById('rPublisher').value.trim(),
+    name: document.getElementById('rName').value.trim(),
+    phone: document.getElementById('rPhone').value.trim(),
+    email: document.getElementById('rEmail').value.trim(),
+    notes: document.getElementById('rNotes').value.trim()
+  };
+
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    bootstrap.Modal.getInstance(document.getElementById('requestModal')).hide();
+    if (data.success) {
+      showToast(`✅ Request submitted! We'll contact you soon. (Ref: ${data.requestId})`, 'success');
+      form.reset();
+    } else {
+      showToast('❌ ' + (data.message || 'Request failed'), 'danger');
+    }
+  } catch (e) {
+    showToast('❌ Network error. Please try again.', 'danger');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-send"></i> Submit Request';
   }
 });
 
