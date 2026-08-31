@@ -37,7 +37,7 @@
     --gold: #d4af37;
     --gold-soft: #b8942e;
     --text: #f1f1f1;
-    --muted: #9a9a9a;
+    --muted: #b0b0b0;
     --danger: #ff4d4d;
     --success: #2ecc71;
   }
@@ -184,6 +184,17 @@
   .form-control:focus { background: #0a0a0a; color: var(--text); border-color: var(--gold); box-shadow: 0 0 0 3px rgba(212,175,55,.2); }
   .btn-close { filter: invert(1); }
 
+  /* ✅ Enhanced helper text visibility */
+  .helper-text {
+    color: #e0e0e0;
+    font-size: .9rem;
+    line-height: 1.5;
+  }
+  .form-label {
+    color: #d0d0d0;
+    font-weight: 500;
+  }
+
   /* Loader */
   .loader {
     display: flex; justify-content: center; align-items: center;
@@ -309,6 +320,28 @@
   </div>
 </section>
 
+<!-- MY BOOKINGS SECTION -->
+<section class="container py-5" id="myBookingsSection" style="display: none;">
+  <div class="text-center mb-4">
+    <h2 style="color: var(--gold);">
+      <i class="bi bi-bookmark-check-fill"></i> My Bookings
+    </h2>
+    <p style="color: var(--muted);">Track your active reservations</p>
+  </div>
+  <div id="bookingsList" class="row g-4"></div>
+  <div id="noBookings" class="text-center py-5 d-none">
+    <i class="bi bi-inbox" style="font-size: 3rem; color: var(--muted);"></i>
+    <p class="mt-3" style="color: var(--muted);">No active bookings</p>
+  </div>
+</section>
+
+<!-- Toggle My Bookings Button -->
+<div class="text-center my-4">
+  <button id="toggleBookingsBtn" class="btn btn-outline-warning btn-lg">
+    <i class="bi bi-bookmarks"></i> View My Bookings
+  </button>
+</div>
+
 <!-- BOOKING MODAL -->
 <div class="modal fade" id="bookingModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
@@ -319,6 +352,9 @@
       </div>
       <div class="modal-body">
         <div id="modalBookInfo" class="mb-3 p-3" style="background:#0a0a0a;border-radius:10px;border:1px solid var(--border)"></div>
+        <p class="helper-text mb-3">
+          <i class="bi bi-info-circle text-warning"></i> Fill in your details below to reserve this book. You'll receive a confirmation with your booking ID.
+        </p>
         <form id="bookingForm">
           <input type="hidden" id="bBookId" />
           <div class="mb-3">
@@ -342,8 +378,8 @@
               <option value="168">1 Week</option>
             </select>
           </div>
-          <small class="text-muted">
-            <i class="bi bi-info-circle"></i> Your reservation will expire automatically after the selected duration. Please collect your book from the store before then.
+          <small class="helper-text">
+            <i class="bi bi-clock"></i> Your reservation will expire automatically after the selected duration. Please collect your book from the store before then.
           </small>
         </form>
       </div>
@@ -368,8 +404,8 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <p class="text-muted small mb-3">
-          <i class="bi bi-info-circle"></i> Can't find what you're looking for? Let us know and we'll try to source it for you!
+        <p class="helper-text mb-3">
+          <i class="bi bi-info-circle text-warning"></i> Can't find what you're looking for? Let us know and we'll try to source it for you!
         </p>
         <form id="requestForm">
           <div class="mb-3">
@@ -385,7 +421,7 @@
             <input type="text" class="form-control" id="rPublisher" placeholder="Optional" />
           </div>
           <hr style="border-color: var(--border);" />
-          <h6 class="mb-3">Your Contact Details</h6>
+          <h6 class="mb-3" style="color: var(--gold);">Your Contact Details</h6>
           <div class="mb-3">
             <label class="form-label">Your Name *</label>
             <input type="text" class="form-control" id="rName" required />
@@ -540,7 +576,7 @@ function renderBooks() {
           <span class="book-category">${b.Category || 'General'}</span>
           <h5 class="book-title">${b.Title}</h5>
           <p class="book-author mb-2">by ${b.Author || 'Unknown'}</p>
-          <p class="text-muted small flex-grow-1">${(b.Description||'').slice(0,90)}${(b.Description||'').length>90?'...':''}</p>
+          <p style="color: var(--muted); font-size: .85rem;" class="flex-grow-1">${(b.Description||'').slice(0,90)}${(b.Description||'').length>90?'...':''}</p>
           <div class="price-row">
             <span class="price-now">₹${finalPrice.toFixed(2)}</span>
             ${discount > 0 ? `<span class="price-old">₹${price.toFixed(2)}</span>` : ''}
@@ -564,9 +600,9 @@ function openBooking(id) {
 
   document.getElementById('bBookId').value = b.ID;
   document.getElementById('modalBookInfo').innerHTML = `
-    <strong>${b.Title}</strong><br>
-    <small class="text-muted">by ${b.Author}</small><br>
-    <span class="text-warning fw-bold">₹${finalPrice.toFixed(2)}</span>`;
+    <strong style="color: var(--gold);">${b.Title}</strong><br>
+    <small style="color: var(--muted);">by ${b.Author}</small><br>
+    <span class="fw-bold" style="color: var(--gold); font-size: 1.2em;">₹${finalPrice.toFixed(2)}</span>`;
   new bootstrap.Modal(document.getElementById('bookingModal')).show();
 }
 
@@ -593,8 +629,10 @@ document.getElementById('submitBooking').addEventListener('click', async () => {
     });
     const data = await res.json();
     bootstrap.Modal.getInstance(document.getElementById('bookingModal')).hide();
+    
     if (data.success) {
-      showToast(`✅ Reserved! Collect before ${new Date(data.expiry).toLocaleString()}`, 'success');
+      showBookingSuccess(data, payload);
+      saveBookingToLocalStorage(data, payload);
       form.reset();
       loadBooks();
     } else {
@@ -607,6 +645,221 @@ document.getElementById('submitBooking').addEventListener('click', async () => {
     btn.innerHTML = '<i class="bi bi-check2-circle"></i> Confirm Reservation';
   }
 });
+
+/* ✅ Enhanced Success Modal */
+function showBookingSuccess(data, payload) {
+  const expiryDate = new Date(data.expiry);
+  const modalHtml = `
+    <div class="modal fade" id="successModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+          <div class="modal-header border-0">
+            <h5 class="modal-title text-success">
+              <i class="bi bi-check-circle-fill"></i> Reservation Confirmed!
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="text-center mb-4">
+              <div style="font-size: 4rem; color: var(--gold);">🎉</div>
+              <h4 class="mt-3">Thank you, ${payload.name}!</h4>
+              <p style="color: var(--muted);">Your book has been reserved successfully</p>
+            </div>
+            
+            <div class="booking-details p-3 rounded" style="background: #0a0a0a; border: 1px solid var(--border);">
+              <div class="row g-3">
+                <div class="col-12">
+                  <div class="d-flex justify-content-between align-items-center p-2 rounded" style="background: #1a1a1a;">
+                    <span style="color: var(--muted);">Booking ID</span>
+                    <div>
+                      <strong class="text-warning" style="font-size: 1.1em;">${data.bookingId}</strong>
+                      <button class="btn btn-sm btn-outline-warning ms-2" onclick="copyBookingId('${data.bookingId}')">
+                        <i class="bi bi-clipboard"></i> Copy
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <small style="color: var(--muted);">Book Title</small>
+                  <p class="mb-0 fw-bold">${data.bookTitle}</p>
+                </div>
+                <div class="col-md-6">
+                  <small style="color: var(--muted);">Author</small>
+                  <p class="mb-0">${data.bookAuthor}</p>
+                </div>
+                <div class="col-md-6">
+                  <small style="color: var(--muted);">Price</small>
+                  <p class="mb-0 fw-bold text-warning">₹${data.finalPrice.toFixed(2)}</p>
+                </div>
+                <div class="col-md-6">
+                  <small style="color: var(--muted);">Customer</small>
+                  <p class="mb-0">${payload.name}</p>
+                </div>
+                <div class="col-12">
+                  <small style="color: var(--muted);">Valid Until</small>
+                  <p class="mb-0">
+                    <strong class="text-danger">${expiryDate.toLocaleString('en-US', { 
+                      weekday: 'short', 
+                      year: 'numeric', 
+                      month: 'short', 
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}</strong>
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            ${payload.email ? `
+              <div class="alert alert-info mt-3 mb-0" style="background: rgba(13, 202, 240, 0.1); border: 1px solid #0dcaf0; color: #9ec5fe;">
+                <i class="bi bi-envelope-check"></i> A confirmation email has been sent to <strong>${payload.email}</strong>
+              </div>
+            ` : ''}
+            
+            <div class="alert alert-warning mt-3 mb-0" style="background: rgba(255, 193, 7, 0.1); border: 1px solid #ffc107; color: #ffda6a;">
+              <i class="bi bi-exclamation-triangle"></i> <strong>Important:</strong> Please collect your book before the expiry time. Show your Booking ID at the counter.
+            </div>
+          </div>
+          <div class="modal-footer border-0">
+            <button type="button" class="btn btn-outline-light" onclick="window.print()">
+              <i class="bi bi-printer"></i> Print Receipt
+            </button>
+            <button type="button" class="btn btn-book" data-bs-dismiss="modal">
+              <i class="bi bi-check2"></i> Done
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  const existingModal = document.getElementById('successModal');
+  if (existingModal) existingModal.remove();
+  
+  document.body.insertAdjacentHTML('beforeend', modalHtml);
+  new bootstrap.Modal(document.getElementById('successModal')).show();
+}
+
+/* Copy Booking ID */
+function copyBookingId(bookingId) {
+  navigator.clipboard.writeText(bookingId).then(() => {
+    showToast('✅ Booking ID copied to clipboard!', 'success');
+  }).catch(() => {
+    const textArea = document.createElement('textarea');
+    textArea.value = bookingId;
+    document.body.appendChild(textArea);
+    textArea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textArea);
+    showToast('✅ Booking ID copied!', 'success');
+  });
+}
+
+/* Save to localStorage */
+function saveBookingToLocalStorage(data, payload) {
+  const bookings = JSON.parse(localStorage.getItem('myBookings') || '[]');
+  bookings.unshift({
+    bookingId: data.bookingId,
+    bookTitle: data.bookTitle,
+    bookAuthor: data.bookAuthor,
+    finalPrice: data.finalPrice,
+    customerName: payload.name,
+    customerPhone: payload.phone,
+    customerEmail: payload.email,
+    bookingDate: new Date().toISOString(),
+    expiryDate: data.expiry,
+    status: 'Confirmed'
+  });
+  localStorage.setItem('myBookings', JSON.stringify(bookings));
+}
+
+/* ---------- My Bookings ---------- */
+document.getElementById('toggleBookingsBtn').addEventListener('click', () => {
+  const section = document.getElementById('myBookingsSection');
+  if (section.style.display === 'none') {
+    section.style.display = 'block';
+    renderMyBookings();
+    document.getElementById('toggleBookingsBtn').innerHTML = '<i class="bi bi-x-circle"></i> Hide My Bookings';
+    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } else {
+    section.style.display = 'none';
+    document.getElementById('toggleBookingsBtn').innerHTML = '<i class="bi bi-bookmarks"></i> View My Bookings';
+  }
+});
+
+function renderMyBookings() {
+  const bookings = JSON.parse(localStorage.getItem('myBookings') || '[]');
+  const list = document.getElementById('bookingsList');
+  const noBookings = document.getElementById('noBookings');
+  
+  const now = new Date();
+  const activeBookings = bookings.filter(b => new Date(b.expiryDate) > now);
+  
+  if (activeBookings.length === 0) {
+    list.innerHTML = '';
+    noBookings.classList.remove('d-none');
+    return;
+  }
+  
+  noBookings.classList.add('d-none');
+  list.innerHTML = '';
+  
+  activeBookings.forEach(booking => {
+    const expiryDate = new Date(booking.expiryDate);
+    const timeLeft = expiryDate - now;
+    const hoursLeft = Math.floor(timeLeft / (1000 * 60 * 60));
+    const daysLeft = Math.floor(hoursLeft / 24);
+    
+    let timeLeftText = '';
+    if (daysLeft > 0) {
+      timeLeftText = `${daysLeft} day${daysLeft > 1 ? 's' : ''} left`;
+    } else if (hoursLeft > 0) {
+      timeLeftText = `${hoursLeft} hour${hoursLeft > 1 ? 's' : ''} left`;
+    } else {
+      timeLeftText = 'Expiring soon';
+    }
+    
+    const col = document.createElement('div');
+    col.className = 'col-12 col-md-6';
+    col.innerHTML = `
+      <div class="booking-card p-3 rounded" style="background: var(--card); border: 1px solid var(--border);">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+          <div>
+            <h6 class="mb-1" style="color: var(--gold);">${booking.bookTitle}</h6>
+            <small style="color: var(--muted);">by ${booking.bookAuthor}</small>
+          </div>
+          <span class="badge bg-success">
+            <i class="bi bi-check-circle"></i> ${booking.status}
+          </span>
+        </div>
+        <div class="mb-3">
+          <small style="color: var(--muted);">Booking ID</small>
+          <div class="d-flex align-items-center gap-2">
+            <strong class="text-warning">${booking.bookingId}</strong>
+            <button class="btn btn-sm btn-outline-warning" onclick="copyBookingId('${booking.bookingId}')">
+              <i class="bi bi-clipboard"></i>
+            </button>
+          </div>
+        </div>
+        <div class="row g-2 mb-3">
+          <div class="col-6">
+            <small style="color: var(--muted);">Price</small>
+            <p class="mb-0 fw-bold">₹${booking.finalPrice.toFixed(2)}</p>
+          </div>
+          <div class="col-6">
+            <small style="color: var(--muted);">Expires</small>
+            <p class="mb-0 fw-bold text-danger">${expiryDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
+          </div>
+        </div>
+        <div class="alert alert-warning mb-0 py-2" style="background: rgba(255, 193, 7, 0.1); border: 1px solid #ffc107; color: #ffda6a; font-size: 0.85rem;">
+          <i class="bi bi-clock"></i> <strong>${timeLeftText}</strong> - Collect before ${expiryDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+        </div>
+      </div>
+    `;
+    list.appendChild(col);
+  });
+}
 
 /* ---------- Request a Book ---------- */
 document.getElementById('requestBookBtn').addEventListener('click', () => {
@@ -639,8 +892,9 @@ document.getElementById('submitRequest').addEventListener('click', async () => {
     });
     const data = await res.json();
     bootstrap.Modal.getInstance(document.getElementById('requestModal')).hide();
+    
     if (data.success) {
-      showToast(`✅ Request submitted! We'll contact you soon. (Ref: ${data.requestId})`, 'success');
+      showRequestSuccess(data, payload);
       form.reset();
     } else {
       showToast('❌ ' + (data.message || 'Request failed'), 'danger');
@@ -652,6 +906,67 @@ document.getElementById('submitRequest').addEventListener('click', async () => {
     btn.innerHTML = '<i class="bi bi-send"></i> Submit Request';
   }
 });
+
+/* ✅ Enhanced Request Success Modal */
+function showRequestSuccess(data, payload) {
+  const modalHtml = `
+    <div class="modal fade" id="requestSuccessModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header border-0">
+            <h5 class="modal-title text-success">
+              <i class="bi bi-check-circle-fill"></i> Request Submitted!
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body text-center">
+            <div style="font-size: 4rem; color: var(--gold);">📚</div>
+            <h4 class="mt-3">Thank you, ${payload.name}!</h4>
+            <p style="color: var(--muted);">We'll try to source this book for you</p>
+            
+            <div class="p-3 rounded text-start mt-4" style="background: #0a0a0a; border: 1px solid var(--border);">
+              <div class="mb-3">
+                <small style="color: var(--muted);">Request ID</small>
+                <div class="d-flex align-items-center gap-2">
+                  <strong class="text-warning">${data.requestId}</strong>
+                  <button class="btn btn-sm btn-outline-warning" onclick="copyBookingId('${data.requestId}')">
+                    <i class="bi bi-clipboard"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="mb-3">
+                <small style="color: var(--muted);">Book Requested</small>
+                <p class="mb-0 fw-bold">${payload.title}</p>
+                ${payload.author ? `<small style="color: var(--muted);">by ${payload.author}</small>` : ''}
+              </div>
+            </div>
+            
+            ${payload.email ? `
+              <div class="alert alert-info mt-3 mb-0" style="background: rgba(13, 202, 240, 0.1); border: 1px solid #0dcaf0; color: #9ec5fe;">
+                <i class="bi bi-envelope"></i> We'll contact you at <strong>${payload.email}</strong> when the book is available
+              </div>
+            ` : `
+              <div class="alert alert-info mt-3 mb-0" style="background: rgba(13, 202, 240, 0.1); border: 1px solid #0dcaf0; color: #9ec5fe;">
+                <i class="bi bi-phone"></i> We'll contact you at <strong>${payload.phone}</strong> when the book is available
+              </div>
+            `}
+          </div>
+          <div class="modal-footer border-0">
+            <button type="button" class="btn btn-book" data-bs-dismiss="modal">
+              <i class="bi bi-check2"></i> Done
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  const existingModal = document.getElementById('requestSuccessModal');
+  if (existingModal) existingModal.remove();
+  
+  document.body.insertAdjacentHTML('beforeend', modalHtml);
+  new bootstrap.Modal(document.getElementById('requestSuccessModal')).show();
+}
 
 /* ---------- Toast ---------- */
 function showToast(msg) {
