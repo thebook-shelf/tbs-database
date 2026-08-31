@@ -3,8 +3,8 @@ const ASSETS = [
   './',
   './index.html',
   './manifest.json',
-  'icon-192.png',
-  'icon-512.png',
+  './icon-192.png',
+  './icon-512.png',
   './icons/maskable-192.png',
   './icons/maskable-512.png',
   './icons/apple-touch-icon.png'
